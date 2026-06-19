@@ -1,0 +1,50 @@
+# users/<user_id>/profile.yaml
+#
+# Nexus Framework — User Profile
+#
+# This file defines identity, access, and behavioral defaults for a single Nexus user.
+# It is loaded at session start and governs which domains, skills, and modes are available.
+#
+# role values:
+#   admin  — full access to all skills and domains; skills_allowed is ignored
+#   member — access restricted to domains listed under `domains` and skills listed
+#             under `skills_allowed`; omitting a skill blocks it at intake (Skill 1)
+
+user_id: PLACEHOLDER_USER_ID          # e.g. jsmith — must be unique across users/
+name: Placeholder Name
+email: placeholder@example.com
+
+role: admin                           # admin has access to all skills; member uses explicit skills_allowed list
+
+created: YYYY-MM-DD                   # ISO 8601; set once at account creation, never updated
+
+# domains controls which domain knowledge packages this user can access.
+# Each entry maps to a directory under domains/ (e.g. sales → domains/sales/).
+# Admin users still respect this list — it filters context loading, not permissions.
+# Leave empty ([]) to load no domain context; use ["*"] to load all available domains.
+domains:
+  # Replace with your own domain names. Each entry maps to a directory under domains/.
+  # - sales
+  # - support
+  # - finance
+  # Use ["*"] to load all available domains.
+
+# skills_allowed is ignored for admin users.
+# For member users, list the numeric skill IDs this user may invoke.
+# Use ["*"] as a shorthand to allow all skills (equivalent to admin for skill access only).
+skills_allowed:
+  - "*"                               # non-admin users should replace "*" with an explicit list e.g. [1, 2, 3, 5]
+
+# default_mode sets the operating mode at session start if the user does not declare one.
+#
+# Valid values:
+#   ideation           — thinking partner mode; nothing gets built; full pushback expected
+#   exploratory_design — planning mode; ideas become concrete system designs before any build
+#   execution          — running mode; trust the process, execute cleanly; no live replanning
+default_mode: exploratory_design
+
+preferences:
+  load_global_memory: true            # load MEMORY.md and per-project memory files at session start
+  load_domain_archive_on_cold_entry: false  # load archived directives when entering a domain cold (slower start, richer context)
+  staleness_threshold_days: 7         # flag any memory entry or directive older than N days as potentially stale
+  session_log_format: markdown        # format for session logs written to audit trail: markdown | json | plain

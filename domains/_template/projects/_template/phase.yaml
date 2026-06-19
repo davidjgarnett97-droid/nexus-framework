@@ -1,0 +1,20 @@
+project: "[PROJECT_NAME]"
+domain: "[DOMAIN]"
+phase: "[ideation|exploratory_design|execution]"
+status: "[active|blocked|complete]"
+priority: "[top|high|medium|low]"
+started: "[YYYY-MM-DD]"
+last_updated: "[YYYY-MM-DD]"
+blocked: false
+block_reason: null
+milestones:
+  - id: 1
+    name: "[MILESTONE_NAME]"
+    status: "[pending|in_progress|complete]"
+    notes: "[Notes on this milestone or null]"
+  - id: 2
+    name: "[MILESTONE_NAME]"
+    status: "[pending|in_progress|complete]"
+    notes: "[Notes on this milestone or null]"
+next_session:
+  resume_at: "[Where to pick up — e.g. 'Skill 5 Planning, step 3' or 'Awaiting operator approval on success criteria']"

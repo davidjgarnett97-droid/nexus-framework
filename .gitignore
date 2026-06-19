@@ -1,0 +1,10 @@
+.env
+Credentials/
+*.pyc
+__pycache__/
+*.egg-info/
+.pytest_cache/
+tmp/
+.tmp/
+*.token.json
+token_*.json

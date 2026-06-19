@@ -1,0 +1,420 @@
+# Skill Registry — central routing, access control, and versioning
+# Owner: Nexus | Maintained by: [OPERATOR]
+# Format per skill:
+#   maintainer:   agent responsible for keeping the skill correct
+#   callers:      agents authorized to invoke (always includes maintainer + nexus)
+#   version:      semantic version of the skill contract
+#   status:       pending_migration | active | deprecated
+#   triggers:     natural-language phrases that map to this skill
+#   inputs:       expected input fields
+#   outputs:      expected output fields
+#
+# DEPLOYMENT NOTE: The "callers" lists below use generic role names.
+# Replace [orchestrator, domain_lead, vertex, nexus] with the actual agent
+# names defined in your deployment before going live.
+
+version: 1
+last_updated: 2026-05-26  # migration complete — all 36 skills active (3 workflow stubs excluded)
+
+skills:
+
+  # ──── Vertex (Master Orchestration) — Skills 1–7, 20–23 ────
+  task_intake_and_parsing:
+    maintainer: vertex
+    callers: [vertex, nexus, domain_lead, orchestrator]
+    version: 0.1.0
+    status: active
+    triggers: ["new request", "intake", "parse task", "categorize request", "task brief"]
+    inputs: [raw_request, task_type, primary_domain, secondary_domain, complexity, domain_familiarity, raw_request_summary, key_unknowns, recommended_next_skill, user]
+    outputs: [task_brief, report, memory_signal]
+    source: skills/task_intake_and_parsing/
+
+  criteria_validation:
+    maintainer: vertex
+    callers: [vertex, nexus, domain_lead, orchestrator]
+    version: 0.1.0
+    status: active
+    triggers: ["validate criteria", "pressure test brief", "challenge assumptions", "check requirements"]
+    inputs: [task_brief, original_brief_summary, assumptions_flagged, missing_constraints, proposed_refined_criteria, question_for_user, user_approval]
+    outputs: [report, unresolved_gaps_count, gate_status, next_skill]
+    source: skills/criteria_validation/
+
+  clarification:
+    maintainer: vertex
+    callers: [vertex, nexus, domain_lead, orchestrator]
+    version: 0.1.0
+    status: active
+    triggers: ["missing parameters", "ambiguous task", "new domain detected", "validation gap"]
+    inputs: [task_brief, validation_report, domain, is_new_domain, round_number]
+    outputs: [gaps, questions, deferred_to_open_questions, route_to_next]
+    source: skills/clarification/
+
+  success_definition:
+    maintainer: vertex
+    callers: [vertex, nexus, domain_lead, orchestrator]
+    version: 0.1.0
+    status: active
+    triggers: ["define success", "what does done look like", "convergence threshold", "finish line"]
+    inputs: [mode, completed_brief, ambiguities, user_choice, agreed_outcome, output_format, measurable_criteria, convergence_threshold, complexity, assumptions_made, clarity_scores]
+    outputs: [ambiguity_count, user_prompt, success_definition, report, route_to_next]
+    source: skills/success_definition/
+
+  planning:
+    maintainer: vertex
+    callers: [vertex, nexus, domain_lead, orchestrator]
+    version: 0.1.0
+    status: active
+    triggers: ["build plan", "decompose goal", "execution plan", "next steps", "roadmap"]
+    inputs: [task, success_definition, steps]
+    outputs: [plan, report, plan_status, skill_gaps, convergence_threshold, parallel_opportunities, critical_path]
+    source: skills/planning/
+
+  dependency_mapping:
+    maintainer: vertex
+    callers: [vertex, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["dependency map", "validate execution order", "circular dependency check", "execution dependencies"]
+    inputs: [execution_plan, steps]
+    outputs: [dependency_map, root_steps, execution_order, circular_dependencies, reclassifications, report]
+    source: skills/dependency_mapping/
+
+  priority_and_sequencing:
+    maintainer: vertex
+    callers: [vertex, nexus, domain_lead, orchestrator]
+    version: 0.1.0
+    status: active
+    triggers: ["what's next", "queue", "sequence", "priority", "ready to run", "re-sequence"]
+    inputs: [task, steps, state]
+    outputs: [now_running, ready_ranked, waiting, stalled, complete, queue_summary, next_resequence_trigger, report]
+    source: skills/priority_and_sequencing/
+
+  convergence:
+    maintainer: vertex
+    callers: [vertex, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["check convergence", "has this converged", "convergence check", "evaluate iteration progress"]
+    inputs: [task, iteration_number, iteration_outputs, complexity, quality_threshold]
+    outputs: [verdict, score, dimension_scores, reason, next_action, report]
+    source: skills/convergence/
+
+  iteration_limit:
+    maintainer: vertex
+    callers: [vertex, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["set iteration limit", "check iteration count", "extend iterations", "iteration cap", "max iterations"]
+    inputs: [mode, task, complexity, iteration_count, reason]
+    outputs: [ok, limit, remaining, status, action, report]
+    source: skills/iteration_limit/
+
+  cost_benefit_analysis:
+    maintainer: vertex
+    callers: [vertex, critic, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["cost benefit", "is it worth another iteration", "continue or stop", "marginal return", "diminishing returns"]
+    inputs: [task, iteration_number, complexity, estimated_gain, resources_spent, convergence_threshold_pct]
+    outputs: [action, verdict, reason, resources_remaining_pct, report]
+    source: skills/cost_benefit_analysis/
+
+  replanning:
+    maintainer: vertex
+    callers: [vertex, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["replan", "blocked step", "plan failed", "revise execution plan", "step validation failed"]
+    inputs: [trigger, failed_step, reason, original_plan, state_log]
+    outputs: [ok, new_plan, preserved_steps, replanned_steps, replan_summary, report]
+    source: skills/replanning/
+
+  # ──── Researcher — Skills 8–14, 17 ────
+  deep_research_methodology:
+    maintainer: researcher
+    callers: [researcher, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["deep research", "research methodology", "systematic research", "source triangulation", "domain research"]
+    inputs: [query, domain, tier_requirements, source_count_target]
+    outputs: [sources, findings, tier_breakdown, confidence_score, gaps, report]
+    source: skills/deep_research_methodology/
+
+  state_tracking:
+    maintainer: researcher
+    callers: [researcher, memory_keeper, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["init state", "update state", "query state", "close task", "track task state"]
+    inputs: [mode, task_id, plan_steps, step_name, action_report, query_type]
+    outputs: [ok, state_log, status, result, report]
+    source: skills/state_tracking/
+
+  duplicate_prevention:
+    maintainer: researcher
+    callers: [researcher, vertex, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["duplicate check", "already researched", "avoid duplication", "check prior work", "have we done this"]
+    inputs: [query, domain, session_id, prior_queries]
+    outputs: [is_duplicate, similarity_score, prior_result, recommendation, report]
+    source: skills/duplicate_prevention/
+
+  scope_creep_detection:
+    maintainer: researcher
+    callers: [researcher, vertex, critic, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["scope check", "drift detected", "is this in scope", "scope creep", "out of scope"]
+    inputs: [original_scope, current_action, drift_events_count]
+    outputs: [verdict, drift_score, drift_events, action, report]
+    source: skills/scope_creep_detection/
+
+  fallback_strategy:
+    maintainer: researcher
+    callers: [researcher, vertex, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["fallback", "source unavailable", "primary approach failed", "alternative strategy", "plan B"]
+    inputs: [failed_step, reason, domain, remaining_resources]
+    outputs: [fallback_action, fallback_steps, risk_level, report]
+    source: skills/fallback_strategy/
+
+  resource_constraint:
+    maintainer: researcher
+    callers: [researcher, vertex, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["set budget", "check budget", "resource limit", "token budget", "usage monitor", "are we over budget"]
+    inputs: [mode, complexity, tokens_used, minutes_elapsed]
+    outputs: [ok, budget, status, tokens_remaining, minutes_remaining, pct_used, report]
+    source: skills/resource_constraint/
+
+  validation_and_assessment:
+    maintainer: researcher
+    callers: [researcher, critic, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["validate output", "assess quality", "check findings", "qa check", "does this meet criteria"]
+    inputs: [task, output, success_criteria, source_tier_breakdown]
+    outputs: [verdict, score, gaps, recommendations, report]
+    source: skills/validation_and_assessment/
+
+  contradiction_detection:
+    maintainer: researcher
+    callers: [researcher, critic, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["contradiction", "conflicting sources", "sources disagree", "flag conflict", "dual-source conflict"]
+    inputs: [research_outputs, domain, claim]
+    outputs: [contradictions, contradiction_count, resolution_options, report]
+    source: skills/contradiction_detection/
+
+  # ──── Critic — Skills 15, 16, 18, 19 ────
+  devils_advocate:
+    maintainer: critic
+    callers: [critic, vertex, nexus, domain_lead, orchestrator]
+    version: 0.1.0
+    status: active
+    triggers: ["challenge recommendation", "stress test", "argue against", "devil's advocate", "objections"]
+    inputs: [central_claim, evidence, assumptions, objections, assumption_stress_test, output_name]
+    outputs: [objections, unresolved_high, unresolved_medium, overall_challenge_rating, recommended_action, report]
+    source: skills/devils_advocate/
+
+  scoring_rubric:
+    maintainer: critic
+    callers: [critic, vertex, nexus, domain_lead, orchestrator]
+    version: 0.1.0
+    status: active
+    triggers: ["build rubric", "score candidates", "evaluation framework", "weighted scoring"]
+    inputs: [mode, task, criteria, disqualifiers, weight_inferences, rubric, candidates]
+    outputs: [rubric, report, candidates, ranked]
+    source: skills/scoring_rubric/
+
+  confidence_scoring:
+    maintainer: critic
+    callers: [critic, researcher, vertex, nexus, domain_lead, orchestrator]
+    version: 0.1.0
+    status: active
+    triggers: ["how confident", "score confidence", "evidence quality", "calibrate certainty"]
+    inputs: [task, candidates, unresolved_objections, contradiction_adjustments]
+    outputs: [candidates, overall_score, overall_label, key_risks, recommended_action, report]
+    source: skills/confidence_scoring/
+
+  recommendation_confidence:
+    maintainer: critic
+    callers: [critic, vertex, nexus, domain_lead, orchestrator]
+    version: 0.1.0
+    status: active
+    triggers: ["final recommendation", "assemble recommendation", "user-facing output"]
+    inputs: [task, confidence_output, weighted_output, unresolved_objections, caveats, key_strengths, key_weaknesses, next_steps, alternative_blurb]
+    outputs: [top_recommendation, tie, tied_with, confidence_label, recommendation_language, discrepancy_note, report]
+    source: skills/recommendation_confidence/
+
+  # ──── Memory Keeper — Skills 24–28 ────
+  audit_logging:
+    maintainer: memory_keeper
+    callers: [memory_keeper, vertex, researcher, critic, escalation_handler, quill, meta_agent, nexus, domain_lead, orchestrator]
+    version: 0.1.0
+    status: active
+    triggers: ["log event", "audit entry", "task start", "task end", "skill output"]
+    inputs: [event_type, user, agent, skill, skill_version, session_id, outcome, summary, detail, project, domain, error_category, tokens, follow_on]
+    outputs: [ok, entry_id, path]
+    source: skills/audit_logging/
+
+  memory_retrieval:
+    maintainer: memory_keeper
+    callers: [memory_keeper, vertex, researcher, critic, quill, nexus, domain_lead, orchestrator]
+    version: 0.1.0
+    status: active
+    triggers: ["what do we know about", "past sessions", "domain context", "prior tasks", "session start"]
+    inputs: [domain, query, task_type, recency_days, include_archive, user, log_retrieval]
+    outputs: [domain, past_sessions_found, audit_entries_found, findings, failure_modes, proven_approaches, decay_flags, memory_confidence, is_new_domain]
+    source: skills/memory_retrieval/
+
+  summary_and_distillation:
+    maintainer: memory_keeper
+    callers: [memory_keeper, quill, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["summarize task", "distill findings", "end of task summary", "close task", "task retrospective"]
+    inputs: [task_name, domain, outputs, learnings, source_tasks]
+    outputs: [summary, key_learnings, domain_knowledge_candidates, task_memory_items, report]
+    source: skills/summary_and_distillation/
+
+  knowledge_decay:
+    maintainer: memory_keeper
+    callers: [memory_keeper, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["check decay", "is this knowledge stale", "review domain knowledge", "decay review", "knowledge freshness"]
+    inputs: [domain, memories, review_date]
+    outputs: [fresh, aging, stale, decay_labels, report]
+    source: skills/knowledge_decay/
+
+  context_window_management:
+    maintainer: memory_keeper
+    callers: [memory_keeper, vertex, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["context full", "compress context", "context management", "trim history", "token limit approaching"]
+    inputs: [max_tokens, tokens_used, session_history]
+    outputs: [level, action, tokens_used_pct, report]
+    source: skills/context_window_management/
+
+  # ──── Escalation Handler — Skills 29–31 ────
+  human_escalation:
+    maintainer: escalation_handler
+    callers: [escalation_handler, vertex, researcher, critic, memory_keeper, quill, meta_agent, nexus, domain_lead, orchestrator]
+    version: 0.1.0
+    status: active
+    triggers: ["escalate to human", "blocked", "need decision", "system alert", "fallback failed"]
+    inputs: [tier, task, triggered_by_skill, situation, completed_so_far, best_output_available, quality_score, the_ask, options, default_if_no_response, session_id, domain, project]
+    outputs: [ok, escalation_id, message, delivery_channel, audit_entry_id]
+    source: skills/human_escalation/
+
+  sensitive_decision_escalation:
+    maintainer: escalation_handler
+    callers: [escalation_handler, vertex, critic, meta_agent, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["sensitive action", "pre-screen decision", "requires authorization", "flag for escalation", "destructive action check"]
+    inputs: [action, action_text, context, registry]
+    outputs: [ok, requires_escalation, matched_rules, sensitivity_keywords_found, recommendation, report]
+    source: skills/sensitive_decision_escalation/
+
+  notification_and_queue:
+    maintainer: escalation_handler
+    callers: [escalation_handler, vertex, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["queue notification", "pending escalation digest", "respond to notification", "escalation queue"]
+    inputs: [mode, tier, message, subject, entry_id, response_choice]
+    outputs: [ok, entry_id, digest, response_result, report]
+    source: skills/notification_and_queue/
+
+  # ──── Quill — Skills 32, 33 ────
+  output_formatting:
+    maintainer: quill
+    callers: [quill, vertex, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["format output", "prepare deliverable", "render for notion", "format for slack", "package results"]
+    inputs: [output_type, channel, content, template]
+    outputs: [ok, template_key, formatted_output, channel, report]
+    source: skills/output_formatting/
+
+  learning_and_adaptation:
+    maintainer: quill
+    callers: [quill, meta_agent, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["learning review", "adapt from task", "extract learnings", "retrospective", "what did we learn"]
+    inputs: [task_name, domain, task_summary, what_worked, what_failed, pattern_count]
+    outputs: [ok, patterns_found, system_improvements, domain_knowledge_updates, report]
+    source: skills/learning_and_adaptation/
+
+  # ──── Meta Agent — Skills 34–36 ────
+  agent_builder:
+    maintainer: meta_agent
+    callers: [meta_agent, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["build new agent", "propose agent", "gap in coverage", "new capability needed", "agent proposal"]
+    inputs: [gap_description, frequency_count, source_tasks, proposed_agent]
+    outputs: [ok, meets_threshold, action, proposal, report]
+    source: skills/agent_builder/
+
+  learning_and_acquiring_tools:
+    maintainer: meta_agent
+    callers: [meta_agent, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["new tool needed", "acquire tool", "tool gap", "integration request", "tool proposal"]
+    inputs: [tool_name, tool_type, use_case, frequency_count, source_tasks]
+    outputs: [ok, meets_threshold, action, tool_spec, report]
+    source: skills/learning_and_acquiring_tools/
+
+  updating_domain_knowledge_base:
+    maintainer: meta_agent
+    callers: [meta_agent, memory_keeper, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["update domain knowledge", "add to knowledge base", "synthesize domain findings", "domain knowledge update"]
+    inputs: [domain, task_summaries, contradiction_flags, existing_domain_page]
+    outputs: [ok, mode, domain, proposed_changes, domain_page, requires_approval, knowledge_confidence, report]
+    source: skills/updating_domain_knowledge_base/
+
+  # ──── Workflow Skills (Sprint Goal 3 — Codified Day 2) ────
+  lead_scraping:
+    maintainer: researcher
+    callers: [researcher, vertex, domain_lead, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["wholesale", "next call", "next lead", "dialing session", "calling session", "who's next"]
+    inputs: [action, notes, page_id, notes_json_path]
+    outputs: [lead_card, log_status, graduation_result, session_summary]
+    source: skills/lead_scraping/
+    domain: "[YOUR_DOMAIN]"  # replace with the domain that owns this skill
+
+  email_triage:
+    maintainer: vertex
+    callers: [vertex, domain_lead, nexus]
+    version: 0.1.0
+    status: active
+    triggers: ["check email", "triage inbox", "process gmail", "flag urgent emails", "draft replies"]
+    inputs: [time_window, thread_filter, dry_run]
+    outputs: [counts, needs_reply_threads, flagged_threads, drafts_created, errors]
+    source: skills/email_triage/
+    domain: "[YOUR_DOMAIN]"  # replace with the domain that owns this skill
+
+  client_deck_builder:
+    maintainer: quill
+    callers: [quill, vertex, domain_lead, nexus]
+    version: 0.1.0
+    status: stub
+    triggers: ["build deck", "create presentation", "format for client", "make slides"]
+    inputs: [deck_type, data_source, template, output_target, recipient]
+    outputs: [deck_url, deck_id, slide_count, assets_used]
+    source: skills/client_deck_builder/
+    domain: cross_domain
