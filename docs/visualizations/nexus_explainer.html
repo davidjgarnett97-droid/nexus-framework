@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus Framework — How It Works</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0f0f13; color: #e2e8f0; font-family: 'Segoe UI', system-ui, sans-serif; padding: 32px; max-width: 1200px; margin: 0 auto; }
+
+  h1 { font-size: 1.5rem; font-weight: 700; color: #f8fafc; margin-bottom: 4px; }
+  .subtitle { font-size: 0.8rem; color: #64748b; margin-bottom: 32px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .section-header { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #4b5563; font-weight: 700; margin: 28px 0 14px; border-bottom: 1px solid #1e1e2e; padding-bottom: 6px; }
+
+  /* HERO CONCEPT */
+  .hero { background: #13131f; border: 1px solid #2a2a3a; border-radius: 12px; padding: 24px 28px; margin-bottom: 24px; display: flex; gap: 24px; align-items: center; }
+  .hero-icon { font-size: 2.8rem; min-width: 60px; text-align: center; }
+  .hero-text h2 { font-size: 1.05rem; font-weight: 700; color: #f1f5f9; margin-bottom: 6px; }
+  .hero-text p { font-size: 0.85rem; color: #94a3b8; line-height: 1.6; }
+  .hero-text strong { color: #a5b4fc; }
+
+  /* 3 LAYERS */
+  .layers { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .layer { border-radius: 12px; padding: 20px; text-align: center; }
+  .layer.l1 { background: #1a1632; border: 2px solid #6366f1; }
+  .layer.l2 { background: #1a2a1a; border: 2px solid #22c55e; }
+  .layer.l3 { background: #1c1c14; border: 2px solid #f59e0b; }
+  .layer-num { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.12em; font-weight: 700; margin-bottom: 8px; }
+  .layer.l1 .layer-num { color: #6366f1; }
+  .layer.l2 .layer-num { color: #22c55e; }
+  .layer.l3 .layer-num { color: #f59e0b; }
+  .layer-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
+  .layer.l1 .layer-title { color: #a5b4fc; }
+  .layer.l2 .layer-title { color: #86efac; }
+  .layer.l3 .layer-title { color: #fcd34d; }
+  .layer-plain { font-size: 0.75rem; color: #64748b; font-style: italic; margin-bottom: 10px; }
+  .layer p { font-size: 0.78rem; color: #94a3b8; line-height: 1.5; }
+  .layer-example { margin-top: 10px; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 8px 10px; font-size: 0.72rem; color: #64748b; text-align: left; }
+  .layer-example span { display: block; color: #94a3b8; margin-top: 2px; }
+
+  /* TASK FLOW */
+  .flow-row { display: flex; align-items: stretch; gap: 0; margin-bottom: 24px; }
+  .flow-node { flex: 1; background: #1a1a24; border: 1px solid #2a2a3a; border-radius: 10px; padding: 16px 14px; text-align: center; }
+  .flow-node.active { background: #1a1632; border-color: #6366f1; }
+  .flow-node .fn-label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.08em; color: #4b5563; margin-bottom: 6px; }
+  .flow-node .fn-name { font-size: 0.85rem; font-weight: 700; color: #e2e8f0; margin-bottom: 4px; }
+  .flow-node .fn-desc { font-size: 0.7rem; color: #64748b; line-height: 1.4; }
+  .flow-node.active .fn-name { color: #a5b4fc; }
+  .flow-arrow { display: flex; align-items: center; padding: 0 6px; color: #374151; font-size: 1.2rem; }
+
+  /* AGENTS GRID */
+  .agents-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; }
+  .agent-card { background: #1a1a24; border: 1px solid #2a2a3a; border-radius: 10px; padding: 14px 12px; text-align: center; transition: border-color 0.2s; }
+  .agent-card:hover { border-color: #6366f1; }
+  .agent-card.head { background: #1a1632; border-color: #6366f1; grid-column: span 2; }
+  .agent-card.head .ac-icon { font-size: 2rem; }
+  .ac-icon { font-size: 1.5rem; margin-bottom: 8px; }
+  .ac-name { font-size: 0.78rem; font-weight: 700; color: #f1f5f9; margin-bottom: 4px; }
+  .agent-card.head .ac-name { font-size: 0.9rem; color: #a5b4fc; }
+  .ac-role { font-size: 0.66rem; color: #64748b; line-height: 1.4; }
+  .agent-card.head .ac-role { font-size: 0.72rem; color: #8b8fc0; }
+  .ac-tag { display: inline-block; margin-top: 6px; font-size: 0.6rem; padding: 2px 7px; border-radius: 999px; }
+  .ac-tag.purple { background: #312e81; color: #a5b4fc; }
+  .ac-tag.green { background: #14532d; color: #86efac; }
+  .ac-tag.amber { background: #3b2a06; color: #fcd34d; }
+  .ac-tag.blue { background: #1e3a5f; color: #93c5fd; }
+  .ac-tag.slate { background: #1e293b; color: #94a3b8; }
+
+  /* ANALOGY BOX */
+  .analogy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .analogy { background: #13131f; border: 1px solid #2a2a3a; border-radius: 10px; padding: 18px; }
+  .analogy h3 { font-size: 0.78rem; font-weight: 700; color: #f1f5f9; margin-bottom: 10px; }
+  .compare-row { display: grid; grid-template-columns: 1fr 20px 1fr; gap: 6px; align-items: center; margin-bottom: 6px; font-size: 0.75rem; }
+  .compare-row .old { color: #6b7280; background: #1a1a24; border-radius: 4px; padding: 5px 8px; }
+  .compare-row .eq { color: #4b5563; text-align: center; }
+  .compare-row .new { color: #a5b4fc; background: #1a1632; border-radius: 4px; padding: 5px 8px; }
+
+  /* EXAMPLE TASK WALKTHROUGH */
+  .walkthrough { background: #13131f; border: 1px solid #2a2a3a; border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+  .wt-title { font-size: 0.78rem; font-weight: 700; color: #f1f5f9; margin-bottom: 4px; }
+  .wt-input { background: #1e1e2e; border-radius: 6px; padding: 8px 12px; font-size: 0.78rem; color: #a5b4fc; margin-bottom: 16px; font-style: italic; }
+  .wt-steps { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+  .wt-step { background: #1a1a24; border: 1px solid #2a2a3a; border-radius: 8px; padding: 10px 8px; text-align: center; position: relative; }
+  .wt-step-num { font-size: 0.6rem; font-weight: 700; color: #6366f1; margin-bottom: 4px; }
+  .wt-step-agent { font-size: 0.68rem; font-weight: 700; color: #a5b4fc; margin-bottom: 4px; }
+  .wt-step-action { font-size: 0.62rem; color: #64748b; line-height: 1.3; }
+  .wt-connector { position: absolute; right: -6px; top: 50%; transform: translateY(-50%); color: #374151; font-size: 0.8rem; z-index: 1; }
+
+  /* SKILLS EXPLAINER */
+  .skills-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .skill-card { background: #1a1a24; border: 1px solid #2a2a3a; border-radius: 10px; padding: 16px; }
+  .skill-card h4 { font-size: 0.8rem; font-weight: 700; color: #f1f5f9; margin-bottom: 6px; }
+  .skill-card p { font-size: 0.73rem; color: #94a3b8; line-height: 1.5; }
+  .skill-num { display: inline-block; background: #312e81; color: #a5b4fc; font-size: 0.62rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; margin-bottom: 8px; }
+
+  /* WHAT NEXUS IS NOT */
+  .not-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .not-card { border-radius: 10px; padding: 16px; }
+  .not-card.bad { background: #1c1414; border: 1px solid #7f1d1d; }
+  .not-card.good { background: #111c16; border: 1px solid #14532d; }
+  .not-card h4 { font-size: 0.75rem; font-weight: 700; margin-bottom: 10px; }
+  .not-card.bad h4 { color: #fca5a5; }
+  .not-card.good h4 { color: #86efac; }
+  .not-item { font-size: 0.75rem; color: #94a3b8; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .not-item:last-child { border-bottom: none; }
+  .not-item::before { margin-right: 6px; }
+  .not-card.bad .not-item::before { content: "✗"; color: #ef4444; }
+  .not-card.good .not-item::before { content: "✓"; color: #22c55e; }
+</style>
+</head>
+<body>
+
+<h1>The Nexus Framework</h1>
+<p class="subtitle">Plain-English Guide · How the System Works · Start Here</p>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-icon">🧠</div>
+  <div class="hero-text">
+    <h2>Think of Nexus as a team of specialists — not a single chatbot.</h2>
+    <p>
+      Most AI tools are one person doing everything. Nexus works more like a <strong>company with departments</strong>. There's a head agent (Nexus) who receives every task, decides who's best suited for it, and hands it off. Specialist agents handle their piece. Then the results come back, get reviewed, and get delivered to you. <strong>No single agent is doing everything</strong> — and that's the point. When one part fails, the rest keep running.
+    </p>
+  </div>
+</div>
+
+<!-- THE 3 LAYERS -->
+<div class="section-header">The 3-Layer Architecture — Why It's Built This Way</div>
+<div class="layers">
+  <div class="layer l1">
+    <div class="layer-num">Layer 1</div>
+    <div class="layer-title">Directives</div>
+    <div class="layer-plain">"The Instructions"</div>
+    <p>Written playbooks that tell the agents exactly what to do, in what order, and what to do when something goes wrong. They live as simple text files.</p>
+    <div class="layer-example">
+      Example:<span>"Every morning, pull the last 24 hours of email. Flag anything from a VIP contact. Summarize action items. Do not send replies without review."</span>
+    </div>
+  </div>
+  <div class="layer l2">
+    <div class="layer-num">Layer 2</div>
+    <div class="layer-title">Orchestration</div>
+    <div class="layer-plain">"The Brain"</div>
+    <p>This is the AI making decisions. It reads the directives, figures out the right sequence of steps, assigns work to specialist agents, and handles anything unexpected.</p>
+    <div class="layer-example">
+      Example:<span>"User asked for a morning brief. Step 1: pull email (Email Agent). Step 2: pull calendar (Cal Agent). Step 3: assemble and deliver."</span>
+    </div>
+  </div>
+  <div class="layer l3">
+    <div class="layer-num">Layer 3</div>
+    <div class="layer-title">Execution</div>
+    <div class="layer-plain">"The Workers"</div>
+    <p>Deterministic Python scripts that actually do the work. They connect to Gmail, Google Calendar, Notion, and other tools. They're reliable and testable — no guessing.</p>
+    <div class="layer-example">
+      Example:<span>run_triage.py connects to Gmail, reads 50 emails, applies labels, returns a structured list back to the brain.</span>
+    </div>
+  </div>
+</div>
+
+<!-- WHY THIS MATTERS -->
+<div class="analogy-grid">
+  <div class="analogy">
+    <h3>Why not just ask ChatGPT to do everything?</h3>
+    <div class="compare-row">
+      <span class="old">One AI does steps 1→5</span>
+      <span class="eq">vs</span>
+      <span class="new">Specialist per step</span>
+    </div>
+    <div class="compare-row">
+      <span class="old">90% accuracy × 5 steps</span>
+      <span class="eq">=</span>
+      <span class="new">59% final success rate</span>
+    </div>
+    <div style="margin: 10px 0; font-size: 0.72rem; color: #94a3b8; line-height: 1.5;">
+      Each time an AI makes a decision, there's a chance it's slightly wrong. Chain 5 decisions together and errors multiply. Nexus breaks work into small, auditable steps with deterministic code doing the reliable parts — so errors don't compound.
+    </div>
+    <div style="background: #14532d; border-radius: 6px; padding: 8px 10px; font-size: 0.72rem; color: #86efac;">
+      Nexus pushes complex logic into tested scripts. The AI focuses on decision-making, not data fetching.
+    </div>
+  </div>
+  <div class="analogy">
+    <h3>Real-world analogy</h3>
+    <div style="font-size: 0.78rem; color: #94a3b8; line-height: 1.7;">
+      <div style="margin-bottom: 8px;">📋 <strong style="color:#a5b4fc;">Directives</strong> = Your company's SOPs and job descriptions</div>
+      <div style="margin-bottom: 8px;">🧠 <strong style="color:#86efac;">Orchestration</strong> = The manager who reads the SOP and tells people what to do</div>
+      <div style="margin-bottom: 8px;">⚙️ <strong style="color:#fcd34d;">Execution</strong> = The employees who actually do the specific task</div>
+      <div style="margin-bottom: 8px;">🗂️ <strong style="color:#93c5fd;">Skills</strong> = The specific techniques each employee knows</div>
+      <div>📬 <strong style="color:#f9a8d4;">Escalation</strong> = When a decision is above the manager's pay grade — it comes to you</div>
+    </div>
+  </div>
+</div>
+
+<!-- AGENTS -->
+<div class="section-header">The 10 Agents — Who Does What</div>
+<div class="agents-grid">
+
+  <div class="agent-card head" style="grid-column: 1 / span 2;">
+    <div class="ac-icon">🏛️</div>
+    <div class="ac-name">Nexus — The Head Agent</div>
+    <div class="ac-role">Every task starts here. Nexus receives the request, figures out what's needed, assigns it to the right specialists, monitors the work, and delivers the final result. Think: chief of staff.</div>
+    <span class="ac-tag purple">Master Orchestrator</span>
+  </div>
+
+  <div class="agent-card">
+    <div class="ac-icon">📬</div>
+    <div class="ac-name">Vertex</div>
+    <div class="ac-role">Email, calendar, scheduling. Handles your inbox and meeting workflow.</div>
+    <span class="ac-tag blue">Communications</span>
+  </div>
+
+  <div class="agent-card">
+    <div class="ac-icon">🏠</div>
+    <div class="ac-name">RE Manager</div>
+    <div class="ac-role">Real estate pipeline. Manages wholesale seller leads, CRM, and deal analysis.</div>
+    <span class="ac-tag amber">Domain Specialist</span>
+  </div>
+
+  <div class="agent-card">
+    <div class="ac-icon">🔍</div>
+    <div class="ac-name">The Researcher</div>
+    <div class="ac-role">Deep-dives on any topic. Validates sources. Returns findings with confidence scores.</div>
+    <span class="ac-tag green">Research</span>
+  </div>
+
+  <div class="agent-card">
+    <div class="ac-icon">⚔️</div>
+    <div class="ac-name">The Critic</div>
+    <div class="ac-role">Challenges plans. Finds what's wrong before you act on it. Scores confidence.</div>
+    <span class="ac-tag amber">Quality Control</span>
+  </div>
+
+  <div class="agent-card">
+    <div class="ac-icon">🗄️</div>
+    <div class="ac-name">Memory Keeper</div>
+    <div class="ac-role">Stores what's been learned. Retrieves context from past work. Prevents repeat mistakes.</div>
+    <span class="ac-tag slate">Memory</span>
+  </div>
+
+  <div class="agent-card">
+    <div class="ac-icon">🚨</div>
+    <div class="ac-name">Escalation Handler</div>
+    <div class="ac-role">Routes decisions that need human input back to you — with clear options and context.</div>
+    <span class="ac-tag amber">Human-in-the-Loop</span>
+  </div>
+
+  <div class="agent-card">
+    <div class="ac-icon">✍️</div>
+    <div class="ac-name">Quill</div>
+    <div class="ac-role">Takes raw output and formats it for delivery — emails, reports, decks, summaries.</div>
+    <span class="ac-tag blue">Output Formatting</span>
+  </div>
+
+  <div class="agent-card">
+    <div class="ac-icon">🏘️</div>
+    <div class="ac-name">Cole</div>
+    <div class="ac-role">Listing agent outreach. Pulls stale MLS data, builds campaigns, runs call queues.</div>
+    <span class="ac-tag green">RE Outreach</span>
+  </div>
+
+  <div class="agent-card">
+    <div class="ac-icon">🔬</div>
+    <div class="ac-name">Meta Agent</div>
+    <div class="ac-role">Proposes improvements to the system itself. Adds new agents and tools. High-privilege — always requires your approval.</div>
+    <span class="ac-tag purple">System Growth</span>
+  </div>
+
+</div>
+
+<!-- EXAMPLE WALKTHROUGH -->
+<div class="section-header">How a Task Actually Moves Through the System</div>
+<div class="walkthrough">
+  <div class="wt-title">Example task:</div>
+  <div class="wt-input">"Give me my morning brief."</div>
+  <div class="wt-steps">
+    <div class="wt-step">
+      <div class="wt-step-num">STEP 1</div>
+      <div class="wt-step-agent">🏛️ Nexus</div>
+      <div class="wt-step-action">Receives request. Identifies it as a "morning brief" task. Routes to Vertex.</div>
+      <div class="wt-connector">›</div>
+    </div>
+    <div class="wt-step">
+      <div class="wt-step-num">STEP 2</div>
+      <div class="wt-step-agent">📬 Vertex</div>
+      <div class="wt-step-action">Runs run_triage.py. Pulls last 24hrs of email. Applies triage labels.</div>
+      <div class="wt-connector">›</div>
+    </div>
+    <div class="wt-step">
+      <div class="wt-step-num">STEP 3</div>
+      <div class="wt-step-agent">📬 Vertex</div>
+      <div class="wt-step-action">Runs calendar script. Pulls today's events. Flags any prep needed.</div>
+      <div class="wt-connector">›</div>
+    </div>
+    <div class="wt-step">
+      <div class="wt-step-num">STEP 4</div>
+      <div class="wt-step-agent">🏛️ Nexus</div>
+      <div class="wt-step-action">Receives both outputs. Checks quality — is this complete? Is anything missing?</div>
+      <div class="wt-connector">›</div>
+    </div>
+    <div class="wt-step">
+      <div class="wt-step-num">STEP 5</div>
+      <div class="wt-step-agent">✍️ Quill</div>
+      <div class="wt-step-action">Assembles the brief. Formats it cleanly. Prepares it for delivery.</div>
+      <div class="wt-connector">›</div>
+    </div>
+    <div class="wt-step">
+      <div class="wt-step-num">STEP 6</div>
+      <div class="wt-step-agent">📬 Delivered</div>
+      <div class="wt-step-action">Brief lands in email or Notion. You read it in under 2 minutes.</div>
+    </div>
+  </div>
+</div>
+
+<!-- SKILLS SECTION -->
+<div class="section-header">Skills — The Specific Techniques Each Agent Knows</div>
+<div class="skills-row">
+  <div class="skill-card">
+    <span class="skill-num">Skills 1–7</span>
+    <h4>Task Management</h4>
+    <p>How Nexus receives, validates, clarifies, and plans every request. These run on every task, no exceptions. Think of them as the intake process before any work starts.</p>
+  </div>
+  <div class="skill-card">
+    <span class="skill-num">Skills 8–19</span>
+    <h4>Domain Work</h4>
+    <p>Specialist capabilities — real estate research, email triage, calendar management, lead scraping. Each skill maps to a directive file and a Python script.</p>
+  </div>
+  <div class="skill-card">
+    <span class="skill-num">Skills 20–23</span>
+    <h4>Quality Control</h4>
+    <p>How the system decides if the output is good enough. Is it done? Does it need another pass? Should it escalate? These prevent the system from delivering garbage confidently.</p>
+  </div>
+</div>
+
+<!-- WHAT IT IS / ISN'T -->
+<div class="section-header">What Nexus Is and Isn't</div>
+<div class="not-grid">
+  <div class="not-card bad">
+    <h4>Nexus is NOT...</h4>
+    <div class="not-item">A chatbot you talk to casually</div>
+    <div class="not-item">A replacement for your judgment on important decisions</div>
+    <div class="not-item">A magic fix that works without setup</div>
+    <div class="not-item">Something that improvises when it doesn't know the answer</div>
+    <div class="not-item">One AI model doing everything</div>
+    <div class="not-item">A system that hides failures from you</div>
+  </div>
+  <div class="not-card good">
+    <h4>Nexus IS...</h4>
+    <div class="not-item">A structured team of specialists — each with a defined role</div>
+    <div class="not-item">A system that routes decisions back to you when they matter</div>
+    <div class="not-item">Built on playbooks (directives) you can read and edit</div>
+    <div class="not-item">Honest about confidence — it tells you when it's unsure</div>
+    <div class="not-item">Extensible — new agents and skills can be added over time</div>
+    <div class="not-item">Auditable — every action is logged and traceable</div>
+  </div>
+</div>
+
+<!-- WHERE TO START -->
+<div class="section-header">Where to Start as a New User</div>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px;">
+  <div style="background:#1a1632;border:1px solid #6366f1;border-radius:10px;padding:16px;text-align:center;">
+    <div style="font-size:1.4rem;margin-bottom:8px;">1️⃣</div>
+    <div style="font-size:0.78rem;font-weight:700;color:#a5b4fc;margin-bottom:4px;">Pick one domain</div>
+    <div style="font-size:0.7rem;color:#64748b;">Email, calendar, or a specific workflow. Don't try to build everything at once.</div>
+  </div>
+  <div style="background:#111c16;border:1px solid #22c55e;border-radius:10px;padding:16px;text-align:center;">
+    <div style="font-size:1.4rem;margin-bottom:8px;">2️⃣</div>
+    <div style="font-size:0.78rem;font-weight:700;color:#86efac;margin-bottom:4px;">Write the directive</div>
+    <div style="font-size:0.7rem;color:#64748b;">A plain-English SOP for what the agent should do. Start simple — 10 lines is enough.</div>
+  </div>
+  <div style="background:#1c1c14;border:1px solid #f59e0b;border-radius:10px;padding:16px;text-align:center;">
+    <div style="font-size:1.4rem;margin-bottom:8px;">3️⃣</div>
+    <div style="font-size:0.78rem;font-weight:700;color:#fcd34d;margin-bottom:4px;">Connect the tools</div>
+    <div style="font-size:0.7rem;color:#64748b;">Authenticate Gmail, Calendar, or whatever the directive needs. One-time setup per tool.</div>
+  </div>
+  <div style="background:#1a1a24;border:1px solid #334155;border-radius:10px;padding:16px;text-align:center;">
+    <div style="font-size:1.4rem;margin-bottom:8px;">4️⃣</div>
+    <div style="font-size:0.78rem;font-weight:700;color:#94a3b8;margin-bottom:4px;">Run it, learn, iterate</div>
+    <div style="font-size:0.7rem;color:#64748b;">Run it once manually. See what breaks. Update the directive. The system gets smarter as you teach it.</div>
+  </div>
+</div>
+
+<div style="font-size:0.7rem;color:#334155;text-align:center;">
+  Nexus Framework · nexus-framework/docs/visualizations/
+</div>
+
+</body>
+</html>
